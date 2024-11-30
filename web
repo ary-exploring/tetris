@@ -1,0 +1,646 @@
+class MainMenu extends Phaser.Scene {
+    constructor() {
+        super('MainMenu');
+    }
+    create() {
+        // Add background
+        this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);
+        // Add title
+        this.add.text(400, 100, 'Tetris', {
+            fontSize: '64px',
+            fill: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        // Add buttons
+        this.createButton(400, 250, 'Start Game', () => this.scene.start('DifficultyScene'));
+        this.createButton(400, 350, 'Options', () => this.scene.start('OptionsScene'));
+        this.createButton(400, 450, 'High Scores', () => this.scene.start('HighScoresScene'));
+    }
+    createButton(x, y, text, onClick) {
+        const button = this.add.text(x, y, text, {
+                fontSize: '32px',
+                fill: '#ffffff',
+                backgroundColor: '#4a4e69',
+                padding: {
+                    left: 15,
+                    right: 15,
+                    top: 10,
+                    bottom: 10
+                }
+            })
+            .setOrigin(0.5)
+            .setInteractive({
+                useHandCursor: true
+            })
+            .on('pointerdown', onClick)
+            .on('pointerover', () => button.setStyle({
+                fill: '#ff0'
+            }))
+            .on('pointerout', () => button.setStyle({
+                fill: '#ffffff'
+            }));
+    }
+}
+class OptionsScene extends Phaser.Scene {
+    constructor() {
+        super('OptionsScene');
+    }
+    create() {
+        // Add background
+        this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);
+        // Add title
+        this.add.text(400, 100, 'Options', {
+            fontSize: '48px',
+            fill: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        // Load saved settings or set defaults
+        this.soundEffects = JSON.parse(localStorage.getItem('soundEffects')) ?? true;
+        this.backgroundMusic = JSON.parse(localStorage.getItem('backgroundMusic')) ?? true;
+        // Create toggle buttons
+        this.createToggle(400, 250, 'Sound Effects', this.soundEffects, (value) => {
+            this.soundEffects = value;
+            localStorage.setItem('soundEffects', JSON.stringify(value));
+        });
+        this.createToggle(400, 350, 'Background Music', this.backgroundMusic, (value) => {
+            this.backgroundMusic = value;
+            localStorage.setItem('backgroundMusic', JSON.stringify(value));
+        });
+        // Add back button
+        this.createButton(400, 500, 'Back', () => this.scene.start('MainMenu'));
+    }
+    createToggle(x, y, text, initialState, onChange) {
+        const label = this.add.text(x - 100, y, text, {
+            fontSize: '24px',
+            fill: '#ffffff'
+        }).setOrigin(1, 0.5);
+        const toggle = this.add.rectangle(x + 50, y, 80, 40, initialState ? 0x00ff00 : 0xff0000)
+            .setInteractive({
+                useHandCursor: true
+            })
+            .on('pointerdown', () => {
+                const newState = !initialState;
+                toggle.fillColor = newState ? 0x00ff00 : 0xff0000;
+                onChange(newState);
+            });
+        const toggleText = this.add.text(x + 50, y, initialState ? 'ON' : 'OFF', {
+            fontSize: '20px',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+    }
+    createButton(x, y, text, onClick) {
+        const button = this.add.text(x, y, text, {
+                fontSize: '32px',
+                fill: '#ffffff',
+                backgroundColor: '#4a4e69',
+                padding: {
+                    left: 15,
+                    right: 15,
+                    top: 10,
+                    bottom: 10
+                }
+            })
+            .setOrigin(0.5)
+            .setInteractive({
+                useHandCursor: true
+            })
+            .on('pointerdown', onClick)
+            .on('pointerover', () => button.setStyle({
+                fill: '#ff0'
+            }))
+            .on('pointerout', () => button.setStyle({
+                fill: '#ffffff'
+            }));
+    }
+}
+class HighScoresScene extends Phaser.Scene {
+    constructor() {
+        super('HighScoresScene');
+    }
+    create() {
+        this.add.text(400, 300, 'High Scores Scene\nUnder Construction', {
+            fontSize: '32px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        this.input.on('pointerdown', () => this.scene.start('MainMenu'));
+    }
+}
+class DifficultyScene extends Phaser.Scene {
+    constructor() {
+        super('DifficultyScene');
+    }
+    create() {
+        // Add background
+        this.add.rectangle(400, 300, 800, 600, 0x1a1a2e);
+        // Add title
+        this.add.text(400, 100, 'Select Difficulty', {
+            fontSize: '48px',
+            fill: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        // Add difficulty buttons
+        this.createButton(400, 250, 'Easy', () => this.startGame('easy'));
+        this.createButton(400, 350, 'Medium', () => this.startGame('medium'));
+        this.createButton(400, 450, 'Hard', () => this.startGame('hard'));
+        // Add back button
+        this.createButton(400, 550, 'Back', () => this.scene.start('MainMenu'));
+    }
+    createButton(x, y, text, onClick) {
+        const button = this.add.text(x, y, text, {
+                fontSize: '32px',
+                fill: '#ffffff',
+                backgroundColor: '#4a4e69',
+                padding: {
+                    left: 15,
+                    right: 15,
+                    top: 10,
+                    bottom: 10
+                }
+            })
+            .setOrigin(0.5)
+            .setInteractive({
+                useHandCursor: true
+            })
+            .on('pointerdown', onClick)
+            .on('pointerover', () => button.setStyle({
+                fill: '#ff0'
+            }))
+            .on('pointerout', () => button.setStyle({
+                fill: '#ffffff'
+            }));
+    }
+    startGame(difficulty) {
+        this.scene.start('GameScene', {
+            difficulty: difficulty
+        });
+    }
+}
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super('GameScene');
+    }
+    init(data) {
+        this.difficulty = data.difficulty || 'medium';
+    }
+    preload() {
+        this.load.image('cyan', 'assets/cyan_block.png');
+        this.load.image('yellow', 'assets/yellow_block.png');
+        this.load.image('purple', 'assets/purple_block.png');
+        this.load.image('orange', 'assets/orange_block.png');
+        this.load.image('blue', 'assets/blue_block.png');
+        this.load.image('green', 'assets/green_block.png');
+        this.load.image('red', 'assets/red_block.png');
+    }
+    create() {
+        console.log('Scene created');
+        // Add background
+        this.add.rectangle(400, 300, 800, 600, 0x000000);
+        // Initialize game grid
+        this.gridWidth = 10;
+        this.gridHeight = 20;
+        this.cellSize = 30;
+        this.grid = [];
+        for (let y = 0; y < this.gridHeight; y++) {
+            this.grid[y] = [];
+            for (let x = 0; x < this.gridWidth; x++) {
+                this.grid[y][x] = null;
+            }
+        }
+        // Create grid graphics
+        this.gridGraphics = this.add.graphics();
+        this.drawGrid();
+        // Initialize current piece and next piece
+        this.currentPiece = this.createRandomPiece();
+        this.nextPiece = this.createRandomPiece();
+        // Initialize hold piece
+        this.holdPiece = null;
+        this.canHold = true;
+        // Set up input
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.input.keyboard.on('keydown-LEFT', this.moveLeft, this);
+        this.input.keyboard.on('keydown-RIGHT', this.moveRight, this);
+        this.input.keyboard.on('keydown-DOWN', this.moveDown, this);
+        this.input.keyboard.on('keydown-UP', this.rotate, this);
+        this.input.keyboard.on('keydown-SPACE', this.holdPieceFunc, this);
+        this.input.keyboard.on('keydown-P', this.togglePause, this);
+        // Add touch controls
+        this.input.on('pointerdown', this.handleTouchStart, this);
+        this.input.on('pointermove', this.handleTouchMove, this);
+        this.input.on('pointerup', this.handleTouchEnd, this);
+        this.touchStartX = 0;
+        this.touchStartY = 0;
+        this.swipeThreshold = 30;
+        // Set up game loop
+        this.dropTime = 0;
+        this.setDropInterval();
+        // Initialize score
+        this.score = 0;
+        this.scoreText = this.add.text(520, 16, 'Score: 0', {
+            fontSize: '32px',
+            fill: '#fff'
+        });
+        // Game over flag
+        this.gameOver = false;
+        // Pause flag
+        this.isPaused = false;
+        // Create next piece preview
+        this.createNextPiecePreview();
+        // Create hold piece display
+        this.createHoldPieceDisplay();
+    }
+    update(time, delta) {
+        if (this.gameOver || this.isPaused) return;
+        this.dropTime += delta;
+        if (this.dropTime > this.dropInterval) {
+            this.moveDown();
+            this.dropTime = 0;
+        }
+    }
+    setDropInterval() {
+        switch (this.difficulty) {
+            case 'easy':
+                this.dropInterval = 1000;
+                break;
+            case 'medium':
+                this.dropInterval = 750;
+                break;
+            case 'hard':
+                this.dropInterval = 500;
+                break;
+            default:
+                this.dropInterval = 750;
+        }
+    }
+    createNextPiecePreview() {
+        this.nextPieceGraphics = this.add.graphics({
+            x: 520,
+            y: 100
+        });
+        this.drawNextPiece();
+    }
+    drawNextPiece() {
+        this.nextPieceGraphics.clear();
+        this.nextPieceGraphics.fillStyle(0x00ff00);
+        for (let y = 0; y < this.nextPiece.shape.length; y++) {
+            for (let x = 0; x < this.nextPiece.shape[y].length; x++) {
+                if (this.nextPiece.shape[y][x]) {
+                    this.nextPieceGraphics.fillRect(
+                        x * this.cellSize,
+                        y * this.cellSize,
+                        this.cellSize,
+                        this.cellSize
+                    );
+                }
+            }
+        }
+    }
+    createHoldPieceDisplay() {
+        this.holdPieceGraphics = this.add.graphics({
+            x: 520,
+            y: 300
+        });
+        this.add.text(520, 270, 'Hold:', {
+            fontSize: '24px',
+            fill: '#fff'
+        });
+    }
+    drawHoldPiece() {
+        this.holdPieceGraphics.clear();
+        if (this.holdPiece) {
+            this.holdPieceGraphics.fillStyle(0x0000ff);
+            for (let y = 0; y < this.holdPiece.shape.length; y++) {
+                for (let x = 0; x < this.holdPiece.shape[y].length; x++) {
+                    if (this.holdPiece.shape[y][x]) {
+                        this.holdPieceGraphics.fillRect(
+                            x * this.cellSize,
+                            y * this.cellSize,
+                            this.cellSize,
+                            this.cellSize
+                        );
+                    }
+                }
+            }
+        }
+    }
+    holdPieceFunc() {
+        if (!this.canHold) return;
+        if (this.holdPiece) {
+            const temp = this.currentPiece;
+            this.currentPiece = this.holdPiece;
+            this.holdPiece = temp;
+            this.currentPiece.x = Math.floor(this.gridWidth / 2) - Math.floor(this.currentPiece.shape[0].length / 2);
+            this.currentPiece.y = 0;
+        } else {
+            this.holdPiece = this.currentPiece;
+            this.currentPiece = this.nextPiece;
+            this.nextPiece = this.createRandomPiece();
+        }
+        this.canHold = false;
+        this.drawHoldPiece();
+        this.drawNextPiece();
+        this.drawPiece();
+    }
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        if (this.isPaused) {
+            this.add.text(400, 300, 'PAUSED', {
+                fontSize: '64px',
+                fill: '#fff'
+            }).setOrigin(0.5);
+        } else {
+            this.children.list
+                .filter(child => child.text === 'PAUSED')
+                .forEach(child => child.destroy());
+        }
+    }
+    createRandomPiece() {
+        const pieces = [{
+                shape: [
+                    [1, 1, 1, 1]
+                ],
+                texture: 'cyan'
+            }, // I - Cyan
+            {
+                shape: [
+                    [1, 1],
+                    [1, 1]
+                ],
+                texture: 'yellow'
+            }, // O - Yellow
+            {
+                shape: [
+                    [1, 1, 1],
+                    [0, 1, 0]
+                ],
+                texture: 'purple'
+            }, // T - Purple
+            {
+                shape: [
+                    [1, 1, 1],
+                    [1, 0, 0]
+                ],
+                texture: 'orange'
+            }, // L - Orange
+            {
+                shape: [
+                    [1, 1, 1],
+                    [0, 0, 1]
+                ],
+                texture: 'blue'
+            }, // J - Blue
+            {
+                shape: [
+                    [0, 1, 1],
+                    [1, 1, 0]
+                ],
+                texture: 'green'
+            }, // S - Green
+            {
+                shape: [
+                    [1, 1, 0],
+                    [0, 1, 1]
+                ],
+                texture: 'red'
+            } // Z - Red
+        ];
+        const piece = Phaser.Utils.Array.GetRandom(pieces);
+        return {
+            shape: piece.shape,
+            texture: piece.texture,
+            x: Math.floor(this.gridWidth / 2) - Math.floor(piece.shape[0].length / 2),
+            y: 0
+        };
+    }
+    moveLeft() {
+        if (this.canMove(this.currentPiece, -1, 0)) {
+            this.currentPiece.x--;
+            this.drawPiece();
+        }
+    }
+    moveRight() {
+        if (this.canMove(this.currentPiece, 1, 0)) {
+            this.currentPiece.x++;
+            this.drawPiece();
+        }
+    }
+    moveDown() {
+        if (this.canMove(this.currentPiece, 0, 1)) {
+            this.currentPiece.y++;
+            this.drawPiece();
+        } else {
+            this.lockPiece();
+            this.clearLines();
+            this.currentPiece = this.nextPiece;
+            this.nextPiece = this.createRandomPiece();
+            this.drawNextPiece();
+            this.canHold = true;
+            if (!this.canMove(this.currentPiece, 0, 0)) {
+                this.gameOver = true;
+                this.showGameOverScreen();
+            }
+        }
+    }
+    showGameOverScreen() {
+        const overlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7);
+        const gameOverText = this.add.text(400, 200, 'Game Over', {
+            fontSize: '64px',
+            fill: '#fff'
+        }).setOrigin(0.5);
+        const scoreText = this.add.text(400, 300, `Final Score: ${this.score}`, {
+            fontSize: '32px',
+            fill: '#fff'
+        }).setOrigin(0.5);
+        const restartButton = this.add.text(400, 400, 'Restart', {
+                fontSize: '32px',
+                fill: '#fff',
+                backgroundColor: '#4a4e69',
+                padding: {
+                    left: 15,
+                    right: 15,
+                    top: 10,
+                    bottom: 10
+                }
+            }).setOrigin(0.5).setInteractive({
+                useHandCursor: true
+            })
+            .on('pointerdown', () => this.scene.restart());
+        const mainMenuButton = this.add.text(400, 470, 'Main Menu', {
+                fontSize: '32px',
+                fill: '#fff',
+                backgroundColor: '#4a4e69',
+                padding: {
+                    left: 15,
+                    right: 15,
+                    top: 10,
+                    bottom: 10
+                }
+            }).setOrigin(0.5).setInteractive({
+                useHandCursor: true
+            })
+            .on('pointerdown', () => this.scene.start('MainMenu'));
+    }
+    rotate() {
+        const rotated = this.rotatePiece(this.currentPiece);
+        if (this.canMove(rotated, 0, 0)) {
+            this.currentPiece = rotated;
+            this.drawPiece();
+        }
+    }
+    canMove(piece, dx, dy) {
+        for (let y = 0; y < piece.shape.length; y++) {
+            for (let x = 0; x < piece.shape[y].length; x++) {
+                if (piece.shape[y][x]) {
+                    const newX = piece.x + x + dx;
+                    const newY = piece.y + y + dy;
+                    if (newX < 0 || newX >= this.gridWidth || newY >= this.gridHeight) {
+                        return false;
+                    }
+                    if (newY >= 0 && this.grid[newY][newX]) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    lockPiece() {
+        for (let y = 0; y < this.currentPiece.shape.length; y++) {
+            for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
+                if (this.currentPiece.shape[y][x]) {
+                    this.grid[this.currentPiece.y + y][this.currentPiece.x + x] = this.currentPiece.texture;
+                }
+            }
+        }
+    }
+    clearLines() {
+        let linesCleared = 0;
+        for (let y = this.gridHeight - 1; y >= 0; y--) {
+            if (this.grid[y].every(cell => cell !== null)) {
+                this.grid.splice(y, 1);
+                this.grid.unshift(new Array(this.gridWidth).fill(null));
+                linesCleared++;
+                y++;
+            }
+        }
+        if (linesCleared > 0) {
+            this.score += linesCleared * 100;
+            this.scoreText.setText('Score: ' + this.score);
+        }
+    }
+    rotatePiece(piece) {
+        const rotated = {
+            shape: piece.shape[0].map((_, index) => piece.shape.map(row => row[index]).reverse()),
+            x: piece.x,
+            y: piece.y,
+            texture: piece.texture // Preserve the texture
+        };
+        return rotated;
+    }
+    drawGrid() {
+        this.gridGraphics.clear();
+        this.gridGraphics.lineStyle(1, 0x333333);
+        for (let y = 0; y < this.gridHeight; y++) {
+            for (let x = 0; x < this.gridWidth; x++) {
+                this.gridGraphics.strokeRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
+            }
+        }
+    }
+    drawPiece() {
+        this.gridGraphics.clear();
+        this.drawGrid();
+        // Draw ghost piece
+        const ghostPiece = {
+            ...this.currentPiece
+        };
+        while (this.canMove(ghostPiece, 0, 1)) {
+            ghostPiece.y++;
+        }
+        for (let y = 0; y < ghostPiece.shape.length; y++) {
+            for (let x = 0; x < ghostPiece.shape[y].length; x++) {
+                if (ghostPiece.shape[y][x]) {
+                    this.add.image(
+                        (ghostPiece.x + x) * this.cellSize + this.cellSize / 2,
+                        (ghostPiece.y + y) * this.cellSize + this.cellSize / 2,
+                        ghostPiece.texture
+                    ).setAlpha(0.3).setScale(this.cellSize / 32); // Assuming the texture is 32x32
+                }
+            }
+        }
+        // Draw current piece
+        for (let y = 0; y < this.currentPiece.shape.length; y++) {
+            for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
+                if (this.currentPiece.shape[y][x]) {
+                    this.add.image(
+                        (this.currentPiece.x + x) * this.cellSize + this.cellSize / 2,
+                        (this.currentPiece.y + y) * this.cellSize + this.cellSize / 2,
+                        this.currentPiece.texture
+                    ).setScale(this.cellSize / 32); // Assuming the texture is 32x32
+                }
+            }
+        }
+        // Draw locked pieces
+        for (let y = 0; y < this.gridHeight; y++) {
+            for (let x = 0; x < this.gridWidth; x++) {
+                if (this.grid[y][x]) {
+                    this.add.image(
+                        x * this.cellSize + this.cellSize / 2,
+                        y * this.cellSize + this.cellSize / 2,
+                        this.grid[y][x]
+                    ).setScale(this.cellSize / 32); // Assuming the texture is 32x32
+                }
+            }
+        }
+    }
+    handleTouchStart(pointer) {
+        this.touchStartX = pointer.x;
+        this.touchStartY = pointer.y;
+    }
+    handleTouchMove(pointer) {
+        const dx = pointer.x - this.touchStartX;
+        const dy = pointer.y - this.touchStartY;
+        if (Math.abs(dx) > this.swipeThreshold) {
+            if (dx > 0) {
+                this.moveRight();
+            } else {
+                this.moveLeft();
+            }
+            this.touchStartX = pointer.x;
+        }
+        if (dy > this.swipeThreshold) {
+            this.moveDown();
+            this.touchStartY = pointer.y;
+        }
+    }
+    handleTouchEnd(pointer) {
+        const dx = pointer.x - this.touchStartX;
+        const dy = pointer.y - this.touchStartY;
+        if (Math.abs(dx) < this.swipeThreshold && Math.abs(dy) < this.swipeThreshold) {
+            this.rotate();
+        } else if (dy < -this.swipeThreshold) {
+            this.holdPieceFunc();
+        }
+    }
+}
+const config = {
+    type: Phaser.AUTO,
+    parent: 'renderDiv',
+    pixelArt: false,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
+    width: 800,
+    height: 600,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: {
+                y: 300
+            },
+            debug: false
+        }
+    },
+    scene: [MainMenu, DifficultyScene, GameScene, OptionsScene, HighScoresScene]
+};
+window.phaserGame = new Phaser.Game(config);
